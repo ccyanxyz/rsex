@@ -5,13 +5,13 @@ use crate::traits::*;
 use crate::utils::*;
 
 use hex::encode as hex_encode;
+use log::debug;
 use reqwest::blocking::Response;
 use reqwest::header::{HeaderMap, HeaderName, HeaderValue, CONTENT_TYPE, USER_AGENT};
 use reqwest::StatusCode;
 use ring::{digest, hmac};
 use serde_json::Value;
 use std::collections::{BTreeMap, HashMap};
-use log::debug;
 
 lazy_static! {
     static ref SPOT_URI: HashMap::<&'static str, &'static str> = {
@@ -73,7 +73,7 @@ impl Binance {
         if !request.is_empty() {
             url.push_str(format!("?{}", request).as_str());
         }
-		debug!("url: {:?}", url);
+        debug!("url: {:?}", url);
         let response = reqwest::blocking::get(url.as_str())?;
         self.handler(response)
     }
@@ -192,7 +192,9 @@ impl Binance {
                 let body = resp.text()?;
                 Ok(body)
             }
-            StatusCode::TOO_MANY_REQUESTS => Err(Box::new(ExError::RateLimitExceeded("rate limit exceeded: 429".into()))),
+            StatusCode::TOO_MANY_REQUESTS => Err(Box::new(ExError::RateLimitExceeded(
+                "rate limit exceeded: 429".into(),
+            ))),
             StatusCode::IM_A_TEAPOT => Err(Box::new(ExError::IpBanned("ip banned: 418".into()))),
             s => Err(Box::new(ExError::ApiError(format!("response: {:?}", s)))),
         }
@@ -324,20 +326,18 @@ impl Binance {
             .as_array()
             .unwrap()
             .iter()
-            .map(|balance| {
-                Balance {
-                    asset: balance["asset"].as_str().unwrap().into(),
-                    free: balance["free"]
-                        .as_str()
-                        .unwrap()
-                        .parse::<f64>()
-                        .unwrap_or(0.0),
-                    locked: balance["locked"]
-                        .as_str()
-                        .unwrap()
-                        .parse::<f64>()
-                        .unwrap_or(0.0),
-                }
+            .map(|balance| Balance {
+                asset: balance["asset"].as_str().unwrap().into(),
+                free: balance["free"]
+                    .as_str()
+                    .unwrap()
+                    .parse::<f64>()
+                    .unwrap_or(0.0),
+                locked: balance["locked"]
+                    .as_str()
+                    .unwrap()
+                    .parse::<f64>()
+                    .unwrap_or(0.0),
             })
             .collect::<Vec<Balance>>();
 
@@ -434,10 +434,10 @@ impl Binance {
         let req = self.build_signed_request(params)?;
         let ret = self.get_signed(uri, &req)?;
         let resp: Vec<bn_types::RawOrder> = serde_json::from_str(&ret)?;
-        let mut history_orders = resp.into_iter().filter(|order| {
-            order.status == "FILLED" || order.status == "CANCELED"
-        })
-        .collect::<Vec<bn_types::RawOrder>>();
+        let mut history_orders = resp
+            .into_iter()
+            .filter(|order| order.status == "FILLED" || order.status == "CANCELED")
+            .collect::<Vec<bn_types::RawOrder>>();
         history_orders.sort_by(|a, b| b.time.cmp(&a.time));
 
         Ok(history_orders)
@@ -463,14 +463,21 @@ impl SpotRest for Binance {
         self.get_balance_raw(asset)
     }
 
-    fn create_order(&self, symbol: &str, price: f64, amount: f64, action: &str, order_type: &str) -> APIResult<String> {
+    fn create_order(
+        &self,
+        symbol: &str,
+        price: f64,
+        amount: f64,
+        action: &str,
+        order_type: &str,
+    ) -> APIResult<String> {
         self.create_order_raw(symbol, price, amount, action, order_type)
     }
 
     fn cancel(&self, id: &str) -> APIResult<bool> {
         self.cancel_raw(id)
     }
-    
+
     fn cancel_all(&self, symbol: &str) -> APIResult<bool> {
         self.cancel_all_raw(symbol)
     }
@@ -482,13 +489,19 @@ impl SpotRest for Binance {
 
     fn get_open_orders(&self, symbol: &str) -> APIResult<Vec<Order>> {
         let raw = self.get_open_orders_raw(symbol)?;
-        let orders = raw.into_iter().map(|order| order.into()).collect::<Vec<Order>>();
+        let orders = raw
+            .into_iter()
+            .map(|order| order.into())
+            .collect::<Vec<Order>>();
         Ok(orders)
     }
 
     fn get_history_orders(&self, symbol: &str) -> APIResult<Vec<Order>> {
         let raw = self.get_history_orders_raw(symbol)?;
-        let orders = raw.into_iter().map(|order| order.into()).collect::<Vec<Order>>();
+        let orders = raw
+            .into_iter()
+            .map(|order| order.into())
+            .collect::<Vec<Order>>();
         Ok(orders)
     }
 }

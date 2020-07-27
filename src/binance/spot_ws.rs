@@ -66,7 +66,7 @@ impl<'a> BinanceWs<'a> {
         match &self.out {
             Some(out) => {
                 let _ = out.send(msg);
-            },
+            }
             None => {
                 warn!("self.out is None");
             }
@@ -154,7 +154,7 @@ impl<'a> Handler for BinanceWs<'a> {
             */
             Some(_) => {
                 info!("ws connected");
-            },
+            }
             None => {
                 warn!("self.out is None");
             }

@@ -17,7 +17,6 @@ pub trait SpotRest {
     fn get_open_orders(&self, symbol: &str) -> APIResult<Vec<Order>>;
     fn get_history_orders(&self, symbol: &str) -> APIResult<Vec<Order>>;
 
-
     fn get_orderbook(&self, symbol: &str, depth: u8) -> APIResult<Orderbook>;
     fn get_ticker(&self, symbol: &str) -> APIResult<Ticker>;
     fn get_kline(&self, symbol: &str, period: &str, limit: u16) -> APIResult<Vec<Kline>>;

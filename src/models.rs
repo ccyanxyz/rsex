@@ -80,7 +80,7 @@ impl Ticker {
             ask: Ask {
                 price: 0f64,
                 amount: 0f64,
-            }
+            },
         }
     }
 }
