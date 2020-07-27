@@ -1,3 +1,3 @@
 # RuSt-EXchanges
 
-Cryptocurrency exchanges API wrap in Rust.
+Cryptocurrency exchanges API wrapped in Rust.
