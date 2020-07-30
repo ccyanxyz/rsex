@@ -756,3 +756,60 @@ mod string_or_float {
         }
     }
 }
+
+
+// swap types
+#[derive(Debug, Serialize, Deserialize, Clone)]
+#[serde(rename_all = "camelCase")]
+pub struct RawSwapBalance {
+    pub asset: String,
+    pub wallet_balance: String,
+    pub unrealized_profit: String,
+    pub margin_balance: String,
+    pub initial_margin: String,
+    pub position_initial_margin: String,
+    pub open_order_initial_margin: String,
+    pub cross_walet_balance: String,
+    pub cross_un_pnl: String,
+    pub available_balance: String,
+    pub max_withdraw_amount: String,
+}
+
+#[derive(Debug, Serialize, Deserialize, Clone)]
+#[serde(rename_all = "camelCase")]
+pub struct RawPosition {
+    pub symbol: String,
+    pub initial_margin: String,
+    pub maint_margin: String,
+    pub unrealized_profit: String,
+    pub position_initial_margin: String,
+    pub open_order_initial_margin: String,
+    pub leverage: String,
+    pub isolated: bool,
+    pub entry_price: String,
+    pub max_notional: String,
+    pub position_side: String,
+}
+
+#[derive(Debug, Serialize, Deserialize, Clone)]
+#[serde(rename_all = "camelCase")]
+pub struct RawSwapAccount {
+    pub fee_tier: u8,
+    pub can_trade: bool,
+    pub can_deposit: bool,
+    pub can_withdraw: bool,
+    pub update_time: u64,
+    pub total_initial_margin: String,
+    pub total_maint_margin: String,
+    pub total_wallet_balance: String,
+    pub total_unrealized_profit: String,
+    pub total_margin_balance: String,
+    pub total_position_initial_margin: String,
+    pub total_open_order_initial_margin: String,
+    pub total_cross_wallet_balance: String,
+    pub total_cross_un_pnl: String,
+    pub available_balance: String,
+    pub max_withdraw_amount: String,
+    pub assets: Vec<RawSwapBalance>,
+    pub positions: Vec<RawPosition>,
+}

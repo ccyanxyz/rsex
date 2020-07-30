@@ -156,7 +156,7 @@ impl BinanceSwap {
     }
 
     pub fn get_symbols(&self) -> APIResult<Vec<SymbolInfo>> {
-        let uri = "/api/v3/exchangeInfo";
+        let uri = "/fapi/v1/exchangeInfo";
         let ret = self.get(uri, "")?;
         let resp: ExchangeInfo = serde_json::from_str(&ret)?;
         let symbols = resp
@@ -168,13 +168,9 @@ impl BinanceSwap {
     }
 }
 
-impl SpotRest for Binance {
+impl FutureRest for BinanceSwap {
     fn get_orderbook(&self, symbol: &str, depth: u8) -> APIResult<Orderbook> {
-        let uri = if self.is_margin {
-            MARGIN_URI.get("get_orderbook").unwrap()
-        } else {
-            SPOT_URI.get("get_orderbook").unwrap()
-        };
+        let uri = "/fapi/v1/depth";
         let params = format!("symbol={}&limit={}", symbol, depth);
         let ret = self.get(uri, &params)?;
         let resp: RawOrderbook = serde_json::from_str(&ret)?;
@@ -182,11 +178,7 @@ impl SpotRest for Binance {
     }
 
     fn get_ticker(&self, symbol: &str) -> APIResult<Ticker> {
-        let uri = if self.is_margin {
-            MARGIN_URI.get("get_ticker").unwrap()
-        } else {
-            SPOT_URI.get("get_ticker").unwrap()
-        };
+        let uri = "/fapi/v1/ticker/bookTicker";
         let params = format!("symbol={}", symbol);
         let ret = self.get(uri, &params)?;
         let resp: RawTicker = serde_json::from_str(&ret)?;
@@ -195,11 +187,7 @@ impl SpotRest for Binance {
     }
 
     fn get_kline(&self, symbol: &str, period: &str, limit: u16) -> APIResult<Vec<Kline>> {
-        let uri = if self.is_margin {
-            MARGIN_URI.get("get_kline").unwrap()
-        } else {
-            SPOT_URI.get("get_kline").unwrap()
-        };
+        let uri = "/fapi/v1/klines";
         let params = format!("symbol={}&interval={}&limit={}", symbol, period, limit);
         let ret = self.get(uri, &params)?;
         let resp: Vec<Vec<Value>> = serde_json::from_str(&ret)?;
@@ -219,33 +207,14 @@ impl SpotRest for Binance {
     }
 
     fn get_balance(&self, asset: &str) -> APIResult<Balance> {
-        let uri = if self.is_margin {
-            MARGIN_URI.get("get_balance").unwrap()
-        } else {
-            SPOT_URI.get("get_balance").unwrap()
-        };
+        let uri = "/fapi/v2/account";
         let params: BTreeMap<String, String> = BTreeMap::new();
         let req = self.build_signed_request(params)?;
         let ret = self.get_signed(uri, &req)?;
-        let val: Value = serde_json::from_str(&ret)?;
-        /*
-        let resp = if self.is_margin {
-            serde_json::from_str::<MarginAccountInfo>(&ret)?
-        } else {
-            serde_json::from_str::<AccountInfo>(&ret)?
-        }
-        */
-
-        let idx = if self.is_margin {
-            "userAssets"
-        } else {
-            "balances"
-        };
-        let balance = val[idx]
-            .as_array()
-            .unwrap()
+        let val: RawSwapAccount = serde_json::from_str(&ret)?;
+        let balance = val.assets.
             .iter()
-            .find(|balance| balance["asset"].as_str().unwrap() == asset);
+            .find(|balance| balance.asset == asset);
         let balance = balance.unwrap();
 
         Ok(Balance {
