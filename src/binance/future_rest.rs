@@ -215,21 +215,18 @@ impl FutureRest for BinanceSwap {
         let balance = val.assets.
             .iter()
             .find(|balance| balance.asset == asset);
-        let balance = balance.unwrap();
-
-        Ok(Balance {
-            asset: asset.into(),
-            free: balance["free"]
-                .as_str()
-                .unwrap()
-                .parse::<f64>()
-                .unwrap_or(0.0),
-            locked: balance["locked"]
-                .as_str()
-                .unwrap()
-                .parse::<f64>()
-                .unwrap_or(0.0),
-        })
+        match balance {
+            Some(bal) => {
+                Ok(Balance {
+                    asset: asset.into(),
+                    free: to_f64(bal.available_balance),
+                    locked: to_f64(bal.wallet_balance) - to_f64(bal.available_balance),
+                })
+            },
+            None => {
+                Err(Box::new(ExError::ApiError("asset not found".into())))
+            }
+        }
     }
 
     fn create_order(
@@ -240,11 +237,7 @@ impl FutureRest for BinanceSwap {
         action: &str,
         order_type: &str,
     ) -> APIResult<String> {
-        let uri = if self.is_margin {
-            MARGIN_URI.get("create_order").unwrap()
-        } else {
-            SPOT_URI.get("create_order").unwrap()
-        };
+        let uri = "/fapi/v1/order";
         let mut params: BTreeMap<String, String> = BTreeMap::new();
         params.insert("symbol".into(), symbol.into());
         params.insert("side".into(), action.into());
@@ -260,11 +253,7 @@ impl FutureRest for BinanceSwap {
     }
 
     fn cancel(&self, id: &str) -> APIResult<bool> {
-        let uri = if self.is_margin {
-            MARGIN_URI.get("cancel").unwrap()
-        } else {
-            SPOT_URI.get("cancel").unwrap()
-        };
+        let uri = "/fapi/v1/order";
         let mut params: BTreeMap<String, String> = BTreeMap::new();
         params.insert("orderId".into(), id.into());
         let req = self.build_signed_request(params)?;
@@ -273,11 +262,7 @@ impl FutureRest for BinanceSwap {
     }
 
     fn cancel_all(&self, symbol: &str) -> APIResult<bool> {
-        let uri = if self.is_margin {
-            MARGIN_URI.get("cancel_all").unwrap()
-        } else {
-            SPOT_URI.get("cancel_all").unwrap()
-        };
+        let uri = "/fapi/v1/allOpenOrders";
         let mut params: BTreeMap<String, String> = BTreeMap::new();
         params.insert("symbol".into(), symbol.into());
         let req = self.build_signed_request(params)?;
@@ -286,11 +271,7 @@ impl FutureRest for BinanceSwap {
     }
 
     fn get_order(&self, id: &str) -> APIResult<Order> {
-        let uri = if self.is_margin {
-            MARGIN_URI.get("get_order").unwrap()
-        } else {
-            SPOT_URI.get("get_order").unwrap()
-        };
+        let uri = "/fapi/v1/order"
         let mut params: BTreeMap<String, String> = BTreeMap::new();
         params.insert("orderId".into(), id.into());
         let req = self.build_signed_request(params)?;
@@ -301,11 +282,7 @@ impl FutureRest for BinanceSwap {
     }
 
     fn get_open_orders(&self, symbol: &str) -> APIResult<Vec<Order>> {
-        let uri = if self.is_margin {
-            MARGIN_URI.get("get_open_orders").unwrap()
-        } else {
-            SPOT_URI.get("get_open_orders").unwrap()
-        };
+        let uri = "/fapi/v1/openOrder";
         let mut params: BTreeMap<String, String> = BTreeMap::new();
         params.insert("symbol".into(), symbol.into());
         let req = self.build_signed_request(params)?;
@@ -333,21 +310,21 @@ mod test {
 
     //#[test]
     fn test_get_orderbook() {
-        let api = Binance::new(None, None, "https://www.binancezh.com".to_string());
+        let api = BinanceSwap::new(None, None, "https://www.binancezh.com".to_string());
         let ret = api.get_orderbook("BTCUSDT", 10);
         println!("{:?}", ret);
     }
 
     //#[test]
     fn test_get_ticker() {
-        let api = Binance::new(None, None, "https://www.binancezh.com".to_string());
+        let api = BinanceSwap::new(None, None, "https://www.binancezh.com".to_string());
         let ret = api.get_ticker("BTCUSDT");
         println!("{:?}", ret);
     }
 
     //#[test]
     fn test_get_kline() {
-        let api = Binance::new(None, None, "https://www.binancezh.com".to_string());
+        let api = BinanceSwap::new(None, None, "https://www.binancezh.com".to_string());
         let ret = api.get_kline("BTCUSDT", "1m", 500);
         println!("{:?}", ret);
         println!("{:?}", ret.unwrap().len());
@@ -355,14 +332,14 @@ mod test {
 
     //#[test]
     fn test_get_balance() {
-        let api = Binance::new(Some(API_KEY.into()), Some(SECRET_KEY.into()), HOST.into());
+        let api = BinanceSwap::new(Some(API_KEY.into()), Some(SECRET_KEY.into()), HOST.into());
         let ret = api.get_balance("ATOM");
         println!("{:?}", ret);
     }
 
     //#[test]
     fn test_create_order() {
-        let api = Binance::new(Some(API_KEY.into()), Some(SECRET_KEY.into()), HOST.into());
+        let api = BinanceSwap::new(Some(API_KEY.into()), Some(SECRET_KEY.into()), HOST.into());
         let ret = api.create_order("BTCUSDT".into(), 9000.0, 0.01, "BUY", "LIMIT");
         println!("{:?}", ret);
     }
