@@ -212,15 +212,15 @@ impl FutureRest for BinanceSwap {
         let req = self.build_signed_request(params)?;
         let ret = self.get_signed(uri, &req)?;
         let val: RawSwapAccount = serde_json::from_str(&ret)?;
-        let balance = val.assets.
+        let balance = val.assets
             .iter()
             .find(|balance| balance.asset == asset);
         match balance {
             Some(bal) => {
                 Ok(Balance {
                     asset: asset.into(),
-                    free: to_f64(bal.available_balance),
-                    locked: to_f64(bal.wallet_balance) - to_f64(bal.available_balance),
+                    free: str_to_f64(&bal.available_balance),
+                    locked: str_to_f64(&bal.wallet_balance) - str_to_f64(&bal.available_balance),
                 })
             },
             None => {
@@ -271,7 +271,7 @@ impl FutureRest for BinanceSwap {
     }
 
     fn get_order(&self, id: &str) -> APIResult<Order> {
-        let uri = "/fapi/v1/order"
+        let uri = "/fapi/v1/order";
         let mut params: BTreeMap<String, String> = BTreeMap::new();
         params.insert("orderId".into(), id.into());
         let req = self.build_signed_request(params)?;
@@ -295,6 +295,10 @@ impl FutureRest for BinanceSwap {
             .collect::<Vec<Order>>();
         Ok(orders)
     }
+
+    fn get_history_orders(&self, symbol: &str) -> APIResult<Vec<Order>> {
+        unimplemented!()
+    }
 }
 
 #[cfg(test)]
@@ -308,32 +312,32 @@ mod test {
         "lCuul7mVApKczbGJBrAgqEIWTWwbQ1BTMBPJyvK19q2BNmlsd5718cAWWByNuY5N";
     const HOST: &'static str = "https://api.binance.com";
 
-    //#[test]
+    #[test]
     fn test_get_orderbook() {
         let api = BinanceSwap::new(None, None, "https://www.binancezh.com".to_string());
         let ret = api.get_orderbook("BTCUSDT", 10);
         println!("{:?}", ret);
     }
 
-    //#[test]
+    #[test]
     fn test_get_ticker() {
         let api = BinanceSwap::new(None, None, "https://www.binancezh.com".to_string());
         let ret = api.get_ticker("BTCUSDT");
         println!("{:?}", ret);
     }
 
-    //#[test]
+    #[test]
     fn test_get_kline() {
         let api = BinanceSwap::new(None, None, "https://www.binancezh.com".to_string());
-        let ret = api.get_kline("BTCUSDT", "1m", 500);
+        let ret = api.get_kline("BTCUSDT", "1m", 10);
         println!("{:?}", ret);
         println!("{:?}", ret.unwrap().len());
     }
 
-    //#[test]
+    #[test]
     fn test_get_balance() {
         let api = BinanceSwap::new(Some(API_KEY.into()), Some(SECRET_KEY.into()), HOST.into());
-        let ret = api.get_balance("ATOM");
+        let ret = api.get_balance("USDT");
         println!("{:?}", ret);
     }
 

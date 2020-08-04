@@ -181,7 +181,7 @@ mod test {
     use super::*;
 
     static WEBSOCKET_URL: &str = "wss://stream.binance.com:9443/ws/btcusdt@depth20";
-    #[test]
+    //#[test]
     fn test_binancews() {
         env_logger::init();
 
