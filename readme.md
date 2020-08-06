@@ -4,7 +4,10 @@ Cryptocurrency exchanges API wrapped in Rust.
 
 
 
-### TODO:
+### TODO
 
 1. Binance & Huobi swap/future API
 2. More exchanges
+
+### Warn
+Use it at your own risk.
