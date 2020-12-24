@@ -14,7 +14,7 @@ fn main() {
         symbol += "USDT";
     }
 
-    let api = Binance::new(None, None, "https://www.binancezh.com".into());
+    let api = Binance::new(None, None, "https://www.binancezh.pro".into());
     let ret = api.get_ticker(&symbol);
     println!("{:?}", ret.unwrap());
 }

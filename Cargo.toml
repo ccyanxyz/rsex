@@ -6,6 +6,14 @@ edition = "2018"
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
+[[bin]]
+name = "tick"
+path = "examples/tick.rs"
+
+[[bin]]
+name = "stream"
+path = "examples/stream.rs"
+
 [dependencies]
 env_logger = "0.7.1"
 log = "0.4.8"
